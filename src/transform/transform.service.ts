@@ -13,7 +13,7 @@ export class TransformService {
         {
           xsltPath,
           sourcePath: xmlPath,
-          result: String, // sonucu string olarak alınıyor
+          result: String, // sonucu string olarak alınıyor..
         },
         (err: any, result: any) => {
           if (err) reject(err);
