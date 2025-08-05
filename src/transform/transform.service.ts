@@ -6,8 +6,8 @@ import * as xslt4node from 'xslt4node';
 
 @Injectable()
 export class TransformService {
-  transform(): Promise<string> {
-    const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+	transform(): Promise<string> {
+		const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="efatura.xslt"?>
 <Invoice
 	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
@@ -227,7 +227,7 @@ export class TransformService {
 	</cac:InvoiceLine>
 </Invoice>`;
 
-    const xsltString = `<?xml version="1.0" encoding="UTF-8"?>
+		const xsltString = `<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -1343,25 +1343,34 @@ export class TransformService {
                           </xsl:template> 
                         </xsl:stylesheet>`;
 
-    const tempDir = os.tmpdir();
-    const tempXmlPath = path.join(tempDir, 'ubl-temp.xml');
-    const tempXsltPath = path.join(tempDir, 'ubl-temp.xslt');
+		const tempDir = os.tmpdir();
+		const tempXmlPath = path.join(tempDir, 'ubl-temp.xml');
+		const tempXsltPath = path.join(tempDir, 'ubl-temp.xslt');
 
-    fs.writeFileSync(tempXmlPath, xmlString, 'utf-8');
-    fs.writeFileSync(tempXsltPath, xsltString, 'utf-8');
+		fs.writeFileSync(tempXmlPath, xmlString, 'utf-8');
+		fs.writeFileSync(tempXsltPath, xsltString, 'utf-8');
 
-    return new Promise((resolve, reject) => {
-      xslt4node.transform(
-        {
-          sourcePath: tempXmlPath,
-          xsltPath: tempXsltPath,
-          result: String,
-        },
-        (err: any, result: any) => {
-          if (err) reject(err);
-          else resolve(result);
-        },
-      );
-    });
-  }
+		return new Promise<string>((resolve, reject) => {
+			xslt4node.transform(
+				{
+					sourcePath: tempXmlPath,
+					xsltPath: tempXsltPath,
+					result: String,
+				},
+				(error: Error | null, output: string | null) => {
+					if (error) {
+						console.error('[XSLT Transformer] Dönüşüm sırasında hata oluştu:', error);
+						return reject(new Error(`XSLT dönüşüm hatası: ${error.message}`));
+					}
+
+					if (!output) {
+						console.warn('[XSLT Transformer] Dönüşüm sonucu boş döndü.');
+						return reject(new Error('XSLT dönüşüm sonucu boş.'));
+					}
+
+					return resolve(output);
+				},
+			);
+		});
+	}
 }
